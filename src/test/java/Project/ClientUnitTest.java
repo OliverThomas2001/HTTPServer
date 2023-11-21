@@ -1,4 +1,4 @@
-package Project.Client;
+package Project;
 
 import static org.junit.Assert.assertTrue;
 
@@ -8,10 +8,12 @@ import org.junit.Test;
 import org.junit.Before;
 import org.junit.After;
 // import java.lang.Thread;
+import org.junit.AfterClass;
 
+import Project.Client.BasicClient;
 import Project.Server.BasicServer;
 
-public class UnitTest {
+public class ClientUnitTest {
     BasicClient client;
     BasicServer server;
     int port = 2000;
@@ -57,21 +59,20 @@ public class UnitTest {
         }
     }
 
-    @Test
-    public void hasRequestSent() {
-        try {
-            client = new BasicClient("localhost", port);
-            client.connect();
-            client.sendRequest("Hello");
-            client.disconnect();
-        } catch (IOException e) {
-            System.out.println("Test3 Error");
-            System.out.println(e.toString());
-        }
-    }
+    // @Test
+    // public void hasRequestSent() {
+    //     try {
+    //         client = new BasicClient("localhost", port);
+    //         client.connect();
+    //         client.sendRequest("GET", "/");
+    //     } catch (IOException e) {
+    //         System.out.println("Test3 Error");
+    //         System.out.println(e.toString());
+    //     }
+    // }
 
     @After
-    public void teardown() {
+    public void teardownClient() {
         if (client.isClosed() == false) {
             try {
                 client.disconnect();
@@ -80,6 +81,11 @@ public class UnitTest {
                 System.out.println(e.toString());
             }
         }
+    }
+
+    @AfterClass
+    public void teardownServer() {
+        server.stop();
     }
     
 

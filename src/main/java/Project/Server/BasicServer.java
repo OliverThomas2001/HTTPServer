@@ -8,13 +8,18 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import java.util.ArrayList;
+import Project.HTTP.HTTPRequest;
 
 
 
 
 public class BasicServer{
     private ServerSocket serverSocket;
+
+    public static void main(String[] args) {
+        BasicServer server = new BasicServer();
+        server.start(2000);
+    }
     
     public void start(int port) {
         try {
@@ -44,8 +49,8 @@ public class BasicServer{
         private Socket clientSocket;
         private PrintWriter output;
         private BufferedReader input;
-        private String requestLine;
-        private ArrayList<String> requestHeaders = new ArrayList<String>();
+
+        private HTTPRequest request;
 
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
@@ -59,34 +64,53 @@ public class BasicServer{
         public void run() {
             try {
                 this.initialise();
+                
+                // First line in HTTP request is the "request line"
+                String requestLine = input.readLine();
 
-                // Reads the first line sent by the client
-                requestLine = input.readLine();
-                System.out.println(requestLine);
+                if (HTTPRequest.validateRequestLine(requestLine)) {
+                    String[] splitReqLine = requestLine.split(" ");
+                    request = new HTTPRequest(splitReqLine[0], splitReqLine[1]);
+                } else {
+                    // Send 400 bad request.
+                }
 
-                // Reads all subsequent lines sent by the client 
+                // Reads all subsequent lines sent by the client and adds headers to hashmap.
                 String inputMessage;
                 while((inputMessage = input.readLine()) != null) {
-                    requestHeaders.add(inputMessage);
+                    String[] header = inputMessage.split(": ");
+                    request.addHeader(header[0], header[1]);
                 }
 
                 this.sendResponse(requestLine);
+
+                this.close();
             } catch (IOException e) {
                 System.out.println(e.toString());
             }
             
         }
 
-        public String getRequestLine() {
-            return this.requestLine;
-        }
-
-        public ArrayList<String> getHeaderList() {
-            return requestHeaders;
-        }
-
         public void sendResponse(String response) {
             output.println(response);
+        }
+
+        public void close() {
+            try {
+                if (input != null) {
+                    input.close();
+                }
+
+                if (output != null) {
+                    output.close();
+                }
+
+                if (clientSocket != null) {
+                    clientSocket.close();
+                }
+            } catch (IOException e) {
+                System.out.println(e.toString());
+            }
         }
     }
 }
