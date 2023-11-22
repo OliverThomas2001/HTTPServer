@@ -9,7 +9,7 @@ import Project.Server.BasicServer;
 public class IntegrationTest {
     BasicClient client;
     BasicServer server;
-    int port = 2000;
+    int port = 3000;
     private static Boolean setUpComplete = false;
 
     @Before

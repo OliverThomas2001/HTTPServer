@@ -24,7 +24,7 @@ public class HTTPRequest {
     public static Boolean validateRequestLine(String requestLine) {
         String[] reqStrings = requestLine.split(" ");
 
-         if (validateMethod(reqStrings[0]) && validateURI(reqStrings[0]) && validateHTTPVersion(reqStrings[2]) && reqStrings.length == 3) return true;
+         if (validateMethod(reqStrings[0]) && validateURI(reqStrings[1]) && validateHTTPVersion(reqStrings[2]) && reqStrings.length == 3) return true;
          return false;
     }
 
@@ -53,13 +53,12 @@ public class HTTPRequest {
     
     public static Boolean validateURI(String uri) {
         // want to only allow alphanumeric characters and '/', uri must start with '/'.
-        return uri.matches("^/[a-zA-Z0-9/]");
+        return uri.matches("^/[a-zA-Z0-9/]*$");
     }
 
     public static Boolean validateHTTPVersion(String version) {
         // At present, I only plan to use version 1.1 but could extend to other versions at a later date.
-        if (version == "HTTP/1.1") return true;
-        return false;
+        return version.equals("HTTP/1.1");
     }
 
     public String getRequestLine() {

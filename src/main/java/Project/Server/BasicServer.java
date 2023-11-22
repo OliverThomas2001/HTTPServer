@@ -64,31 +64,38 @@ public class BasicServer{
         public void run() {
             try {
                 this.initialise();
+
+                String requestLine;
+                
                 
                 // First line in HTTP request is the "request line"
-                String requestLine = input.readLine();
+                if ((requestLine = input.readLine()) != null){
+                    System.out.println(requestLine);
+                    if (HTTPRequest.validateRequestLine(requestLine)) {
+                        String[] splitReqLine = requestLine.split(" ");
+                        request = new HTTPRequest(splitReqLine[0], splitReqLine[1]);
 
-                if (HTTPRequest.validateRequestLine(requestLine)) {
-                    String[] splitReqLine = requestLine.split(" ");
-                    request = new HTTPRequest(splitReqLine[0], splitReqLine[1]);
+                        // Reads all subsequent lines sent by the client and adds headers to hashmap.
+                        String inputMessage;
+                        //  && !inputMessage.isEmpty()
+                        while((inputMessage = input.readLine()) != null && !inputMessage.isEmpty()) {
+                            System.out.println(inputMessage);
+                            String[] header = inputMessage.split(": ");
+                            request.addHeader(header[0], header[1]);
+                        }
+                        this.sendResponse("HTTP/1.1 200 OK");
+                        this.sendResponse("\n");
+
                 } else {
                     // Send 400 bad request.
                 }
-
-                // Reads all subsequent lines sent by the client and adds headers to hashmap.
-                String inputMessage;
-                while((inputMessage = input.readLine()) != null) {
-                    String[] header = inputMessage.split(": ");
-                    request.addHeader(header[0], header[1]);
                 }
 
-                this.sendResponse(requestLine);
-
                 this.close();
+                System.out.println(this.clientSocket.isClosed());
             } catch (IOException e) {
                 System.out.println(e.toString());
-            }
-            
+            }  
         }
 
         public void sendResponse(String response) {

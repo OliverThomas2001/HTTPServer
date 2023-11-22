@@ -11,7 +11,17 @@ import org.junit.After;
 import org.junit.AfterClass;
 
 import Project.Client.BasicClient;
+import Project.HTTP.HTTPRequest;
 import Project.Server.BasicServer;
+
+import java.net.URI;
+// import java.net.http.HttpClient;
+// import java.net.http.HttpRequest;
+import java.net.http.*;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.time.Duration;
+
+
 
 public class ClientUnitTest {
     BasicClient client;
@@ -58,6 +68,25 @@ public class ClientUnitTest {
             System.out.println(e.toString());
         }
     }
+    
+    @Test
+    public void requestTest() {
+        HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create("http://localhost:2000/"))
+        .header("header2", "value2")
+        .GET()
+        .version(HttpClient.Version.HTTP_1_1)
+        .build();
+
+        try {
+            HttpResponse<String> client = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build()
+            .send(request, BodyHandlers.ofString());
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+    }
 
     // @Test
     // public void hasRequestSent() {
@@ -71,22 +100,22 @@ public class ClientUnitTest {
     //     }
     // }
 
-    @After
-    public void teardownClient() {
-        if (client.isClosed() == false) {
-            try {
-                client.disconnect();
-            } catch (IOException e) {
-                System.out.println("Teardown Error");
-                System.out.println(e.toString());
-            }
-        }
-    }
+    // @After
+    // public void teardownClient() {
+    //     if (client.isClosed() == false) {
+    //         try {
+    //             client.disconnect();
+    //         } catch (IOException e) {
+    //             System.out.println("Teardown Error");
+    //             System.out.println(e.toString());
+    //         }
+    //     }
+    // }
 
-    @AfterClass
-    public void teardownServer() {
-        server.stop();
-    }
+    // @AfterClass
+    // public void teardownServer() {
+    //     server.stop();
+    // }
     
 
 
