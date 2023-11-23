@@ -7,6 +7,8 @@ import java.io.IOException;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import Project.HTTP.HTTPRequest;
 
@@ -15,19 +17,21 @@ import Project.HTTP.HTTPRequest;
 
 public class BasicServer{
     private ServerSocket serverSocket;
+    private ExecutorService threadPool;
 
     public static void main(String[] args) {
         BasicServer server = new BasicServer();
-        server.start(2000);
+        server.start(2000, 4);
     }
     
-    public void start(int port) {
+    public void start(int port, int threadPoolSize) {
         try {
             serverSocket = new ServerSocket(port);
+            threadPool = Executors.newFixedThreadPool(threadPoolSize);
             System.out.println("Server listening on port " + serverSocket.getLocalPort());
             
             while (true) {
-                new ClientHandler(serverSocket.accept()).start();
+                threadPool.submit(new ClientHandler(serverSocket.accept()));
             }
 
         } catch(IOException e) {
@@ -40,12 +44,15 @@ public class BasicServer{
             if (!serverSocket.isClosed()) {
                 serverSocket.close();
             }
+            if (threadPool != null && !threadPool.isShutdown()) {
+                threadPool.shutdown();
+            }
         } catch (IOException e) {
             System.out.println(e.toString());
         }
     }
 
-    public static class ClientHandler extends Thread {
+    public static class ClientHandler implements Runnable {
         private Socket clientSocket;
         private PrintWriter output;
         private BufferedReader input;
@@ -91,11 +98,11 @@ public class BasicServer{
                 }
                 }
 
-                this.close();
-                System.out.println(this.clientSocket.isClosed());
             } catch (IOException e) {
                 System.out.println(e.toString());
-            }  
+            } finally {
+                this.close();
+            }
         }
 
         public void sendResponse(String response) {

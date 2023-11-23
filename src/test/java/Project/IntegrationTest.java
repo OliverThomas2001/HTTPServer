@@ -10,6 +10,7 @@ public class IntegrationTest {
     BasicClient client;
     BasicServer server;
     int port = 3000;
+    int threadPoolSize = 4;
     private static Boolean setUpComplete = false;
 
     @Before
@@ -20,7 +21,7 @@ public class IntegrationTest {
 
         server = new BasicServer();
         Thread serverThread = new Thread(() -> {
-            server.start(port);
+            server.start(port, threadPoolSize);
         });
         serverThread.start();
         try{

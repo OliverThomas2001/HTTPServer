@@ -27,6 +27,7 @@ public class ClientUnitTest {
     BasicClient client;
     BasicServer server;
     int port = 2000;
+    int threadPoolSize = 4;
     private static Boolean setUpComplete = false;
 
     @Before
@@ -37,7 +38,7 @@ public class ClientUnitTest {
 
         server = new BasicServer();
         Thread serverThread = new Thread(() -> {
-            server.start(port);
+            server.start(port, threadPoolSize);
         });
         serverThread.start();
         try{
