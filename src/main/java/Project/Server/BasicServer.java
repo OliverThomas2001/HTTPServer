@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import Project.HTTP.HTTPRequest;
 
@@ -18,6 +19,7 @@ import Project.HTTP.HTTPRequest;
 public class BasicServer{
     private ServerSocket serverSocket;
     private ExecutorService threadPool;
+    private volatile Boolean quit = false;
 
     public static void main(String[] args) {
         BasicServer server = new BasicServer();
@@ -30,26 +32,30 @@ public class BasicServer{
             threadPool = Executors.newFixedThreadPool(threadPoolSize);
             System.out.println("Server listening on port " + serverSocket.getLocalPort());
             
-            while (true) {
+            while (!quit) {
                 threadPool.submit(new ClientHandler(serverSocket.accept()));
             }
 
         } catch(IOException e) {
             e.printStackTrace();
+        } finally {
+            try{
+                System.out.println("Exiting server start loop.");
+                threadPool.shutdown();
+                System.out.println("Shutting down thread pool.");
+                threadPool.awaitTermination(1, TimeUnit.SECONDS); // waits for all threads to terminate for up to 10 seconds.
+                System.out.println("Thread pool shut down completed.");
+                serverSocket.close();
+                System.out.println("Server socket closed.");
+
+            } catch (IOException | InterruptedException e) {
+                System.out.println(e.toString());
+            }
         }
     }
 
     public void stop() {
-        try {
-            if (!serverSocket.isClosed()) {
-                serverSocket.close();
-            }
-            if (threadPool != null && !threadPool.isShutdown()) {
-                threadPool.shutdown();
-            }
-        } catch (IOException e) {
-            System.out.println(e.toString());
-        }
+        quit = true;
     }
 
     public static class ClientHandler implements Runnable {
@@ -101,6 +107,7 @@ public class BasicServer{
             } catch (IOException e) {
                 System.out.println(e.toString());
             } finally {
+                
                 this.close();
             }
         }
