@@ -1,5 +1,8 @@
 package Project.Server;
 
+import java.util.Map;
+import java.util.HashMap;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -10,10 +13,13 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.Arrays;
 
-import Project.HTTP.HTTPRequest;
+import Project.Http.HttpRequest;
 
-
+interface RequestHandler {
+    void handleHttpRequest(HttpRequest req);
+}
 
 
 public class BasicServer{
@@ -21,9 +27,21 @@ public class BasicServer{
     private ExecutorService threadPool;
     private volatile Boolean quit = false;
 
+    private static Map<String, RequestHandler> routes = new HashMap<String, RequestHandler>(); // needs to be shared amongst all instances of BasicServer.
     public static void main(String[] args) {
+
+        System.out.println(Arrays.toString(new String("Hello?").split("\\?")));
+
+
         BasicServer server = new BasicServer();
-        server.start(2000, 4);
+        server.addRoute("GET/", (req) -> System.out.println("Request Recieved."));
+        server.addRoute("GET/new", (req) -> {
+            System.out.println("Second route executed");
+        });
+        
+        
+        
+        server.start(2000, 4); 
     }
     
     public void start(int port, int threadPoolSize) {
@@ -58,12 +76,23 @@ public class BasicServer{
         quit = true;
     }
 
+    public void addRoute(String route, RequestHandler handler) { // route is a combination of method and uri. e.g. "GET /"
+        BasicServer.routes.put(route, handler);
+    }
+
+
+    public static Boolean isPermittedRoute(String method, String uri) {
+        System.out.println("isPermittedRoute" + BasicServer.routes.containsKey(method + uri));
+        return BasicServer.routes.containsKey(method + uri);
+    }
+
     public static class ClientHandler implements Runnable {
         private Socket clientSocket;
         private PrintWriter output;
         private BufferedReader input;
 
-        private HTTPRequest request;
+        private HttpRequest request;
+        // add response here;
 
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
@@ -79,14 +108,13 @@ public class BasicServer{
                 this.initialise();
 
                 String requestLine;
-                
-                
                 // First line in HTTP request is the "request line"
                 if ((requestLine = input.readLine()) != null){
                     System.out.println(requestLine);
-                    if (HTTPRequest.validateRequestLine(requestLine)) {
-                        String[] splitReqLine = requestLine.split(" ");
-                        request = new HTTPRequest(splitReqLine[0], splitReqLine[1]);
+                    request = new HttpRequest(requestLine);
+
+                    if (request.getRequestValidity()) {
+                        System.out.println("Valid request line");
 
                         // Reads all subsequent lines sent by the client and adds headers to hashmap.
                         String inputMessage;
@@ -96,12 +124,18 @@ public class BasicServer{
                             String[] header = inputMessage.split(": ");
                             request.addHeader(header[0], header[1]);
                         }
+
+                        handleHttpRequest(request.getRequestMethod() + request.getRequestPath(), request);
+
                         this.sendResponse("HTTP/1.1 200 OK");
                         this.sendResponse("\n");
 
-                } else {
-                    // Send 400 bad request.
-                }
+                    } else {
+                        System.out.println("Invalid request line");
+                        // Send 400 bad request.
+                        this.sendResponse("HTTP/1.1 400 Bad Request");
+                        this.sendResponse("\n");
+                    }
                 }
 
             } catch (IOException e) {
@@ -131,6 +165,16 @@ public class BasicServer{
                 }
             } catch (IOException e) {
                 System.out.println(e.toString());
+            }
+        }
+
+        // can likely remove the request parameter from this function just use the instance variable.
+        public void handleHttpRequest(String route, HttpRequest req) {
+            RequestHandler handler = routes.get(route);
+            if (handler != null) {
+                handler.handleHttpRequest(req);
+            } else {
+                // Send 400 bad request.
             }
         }
     }

@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import java.net.Socket;
 
-import Project.HTTP.HTTPRequest;
+import Project.Http.HttpRequest;
 
 
 public class BasicClient{
@@ -47,14 +47,14 @@ public class BasicClient{
         return socket.isClosed();
     }
     
-    public void sendRequest(String method, String uri) throws IOException{
-        HTTPRequest request = new HTTPRequest(method, uri);
-        output.println(request.getRequestLine());
-        String[] headerArray = request.getHeaderArray();
-        for (String header : headerArray) {
-            output.println(header);
-        }   
-    }
+    // public void sendRequest(String method, String uri) throws IOException{
+    //     HttpRequest request = new HttpRequest(method, uri);
+    //     output.println(request.getRequestLine());
+    //     String[] headerArray = request.getHeaderArray();
+    //     for (String header : headerArray) {
+    //         output.println(header);
+    //     }   
+    // }
 
     public String recieveResponse() throws IOException{
         String response = input.readLine();

@@ -24,9 +24,7 @@ public class BasicServerIntegrationTest {
     public void connectionCheck() {
         try {
             Socket socket = new Socket(serverAddress, port);
-            Boolean connected = socket.isConnected();
-            System.out.println(connected);
-            assertTrue(connected);
+            assertTrue(socket.isConnected());
         } catch (IOException e) {
             System.out.println(e.toString());
         }
