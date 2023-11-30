@@ -11,7 +11,7 @@ public class HttpRequest {
     private String requestPath;
     private String requestHttpVersion;
 
-    private HashMap<String, Object> requestParameters = new HashMap<>(); // this may need to be changed to determine the type of the value.
+    private HashMap<String, String> requestParameters = new HashMap<>(); // this may need to be changed to determine the type of the value.
     private HashMap<String, String> requestHeaders = new HashMap<>();
 
     
@@ -70,6 +70,12 @@ public class HttpRequest {
         }
         return headerArray;
     }
+
+    public String getParameterValue(String param) {
+        return requestParameters.get(param);
+    }
+
+    
 
     public void addHeader(String headerType, String headerValue) {
         requestHeaders.put(headerType, headerValue);

@@ -12,8 +12,8 @@ public class HttpRequestTests {
     @BeforeClass
     public static void setUp(){
         BasicServer server = new BasicServer();
-        server.addRoute("GET", "/", (req) -> {
-            System.out.println("defaultTestRoute");
+        server.addRoute("GET", "/", (req, res) -> {
+            
         });
     }
 
@@ -78,6 +78,7 @@ public class HttpRequestTests {
         // Incorrect version
         HttpRequest request2 = new HttpRequest("GET / HTTP/1.0");
         assertFalse(request2.getRequestValidity());
+
     }
 
 }

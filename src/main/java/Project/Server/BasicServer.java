@@ -17,6 +17,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import Project.Http.HttpRequest;
+import Project.Http.HttpResponse;
 
 
 public class BasicServer{
@@ -31,8 +32,15 @@ public class BasicServer{
 
 
         BasicServer server = new BasicServer();
-        server.addRoute("GET", "/", (req) -> System.out.println("Request Recieved."));
-        server.addRoute("GET", "/new", (req) -> {
+        server.addRoute("GET", "/", (req, res) -> {
+            res.setHttpVersion("HTTP/1.1");
+            res.setStatusCode(200);
+            res.addHeader("Origin", "localhost:2000");
+            res.addHeader("Content-Type", "text/plain; charset=UTF-8");
+            res.addHeader("Content-Length", "12");
+            res.addBody(req.getParameterValue("param1"));
+        });
+        server.addRoute("GET", "/new", (req, res) -> {
             System.out.println("Second route executed");
         });
         
@@ -120,21 +128,25 @@ public class BasicServer{
                         String inputMessage;
                         //  && !inputMessage.isEmpty()
                         while((inputMessage = input.readLine()) != null && !inputMessage.isEmpty()) {
-                            System.out.println(inputMessage);
+                            // System.out.println(inputMessage);
                             String[] header = inputMessage.split(": ");
                             request.addHeader(header[0], header[1]);
                         }
+                        
 
-                        handleHttpRequest(request.getRequestMethod() + request.getRequestPath(), request);
+                        HttpResponse response = new HttpResponse();
+                        handleHttpRequest(request.getRequestMethod() + request.getRequestPath(), request, response);
 
-                        this.sendResponse("HTTP/1.1 200 OK");
-                        this.sendResponse("\n");
+                        this.sendResponse(response);
 
                     } else {
                         System.out.println("Invalid request line");
                         // Send 400 bad request.
-                        this.sendResponse("HTTP/1.1 400 Bad Request");
-                        this.sendResponse("\n");
+                        HttpResponse response = new HttpResponse();
+                        response.setHttpVersion("HTTP/1.1");
+                        response.setStatusCode(415);
+                        this.sendResponse(response);
+                        
                     }
                 }
 
@@ -146,8 +158,22 @@ public class BasicServer{
             }
         }
 
-        public void sendResponse(String response) {
-            output.println(response);
+        public void sendResponse(HttpResponse response) {
+
+            // add mandatory headers here e.g if response body exists, add content-length etc.
+
+
+            output.println(response.getStatusMessage());
+            if (response.getStatusCode() < 500) {
+                for (String header : response.getHeaderArray()){
+                    System.out.println(header);
+                    output.println(header);
+                }
+                output.println("\n");
+                if (response.getResponseBody() != null){
+                    output.println(response.getResponseBody());
+                }
+            }
         }
 
         public void close() {
@@ -169,10 +195,10 @@ public class BasicServer{
         }
 
         // can likely remove the request parameter from this function just use the instance variable.
-        public void handleHttpRequest(String route, HttpRequest req) {
+        public void handleHttpRequest(String route, HttpRequest req, HttpResponse res) {
             RequestHandler handler = routes.get(route);
             if (handler != null) {
-                handler.handleHttpRequest(req);
+                handler.handleHttpRequest(req, res);
             } else {
                 // Send 400 bad request.
             }
