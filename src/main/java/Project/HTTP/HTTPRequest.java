@@ -1,7 +1,6 @@
 package Project.Http;
 
 import java.util.HashMap;
-import java.util.Arrays;
 
 import Project.Server.BasicServer;
 
@@ -20,8 +19,6 @@ public class HttpRequest {
     public HttpRequest(String requestLine) {
         String[] requestLineComponents = requestLine.split(" ");
 
-        System.out.println(Arrays.toString(requestLineComponents));
-
         requestMethod = requestLineComponents[0];
         requestUri = requestLineComponents[1];
         requestPath = requestUri.split("\\?")[0];
@@ -29,15 +26,11 @@ public class HttpRequest {
         
 
         isRequestValid = validateRequestLine(requestLine);
-        System.out.println("URI: "+ requestUri);
-        System.out.println("URIValidity Test: "+ validateUri());
 
         if (requestUri.contains("?") && isRequestValid){ // if parameters exist in the request line ...
             //Need to split the uri into the path and parameters.
             String[] requestUriComponents = requestLineComponents[1].split("\\?");
             requestPath = requestUriComponents[0];
-
-            System.out.println(Arrays.toString(requestUriComponents));
 
             String[] requestParameterArray = requestUriComponents[1].split("\\&");
 
@@ -86,14 +79,13 @@ public class HttpRequest {
         // For future development.
     }
 
-    // Method intended to be used ny server to validate incoming requests.
     private Boolean validateRequestLine(String requestLine) {
 
          if (validateMethod() && validateUri() && validateHttpVersion() && requestLine.split(" ").length == 3) return true;
          return false;
     }
 
-    public Boolean validateMethod() {
+    private Boolean validateMethod() {
         switch (requestMethod){
             case "GET":
                 return true;
@@ -116,12 +108,12 @@ public class HttpRequest {
         }
     }
     
-    public Boolean validateUri() {
+    private Boolean validateUri() {
         // want to only allow alphanumeric characters and '/', uri must start with '/'.
-        return requestUri.matches("^/[a-zA-Z0-9/]*(\\?[A-Za-z0-9]+=[A-Za-z0-9]+(&[A-Za-z0-9]+=[A-Za-z0-9]+)*)?$"); //&& BasicServer.isPermittedRoute(requestMethod, requestPath)
+        return requestUri.matches("^/[a-zA-Z0-9/]*(\\?[A-Za-z0-9]+=[A-Za-z0-9]+(&[A-Za-z0-9]+=[A-Za-z0-9]+)*)?$") && BasicServer.isPermittedRoute(requestMethod, requestPath); //&& BasicServer.isPermittedRoute(requestMethod, requestPath)
     }
 
-    public Boolean validateHttpVersion() {
+    private Boolean validateHttpVersion() {
         // At present, I only plan to use version 1.1 but could extend to other versions at a later date.
         return requestHttpVersion.equals("HTTP/1.1");
     }

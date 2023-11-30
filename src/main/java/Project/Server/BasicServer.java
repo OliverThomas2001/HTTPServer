@@ -2,6 +2,11 @@ package Project.Server;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Arrays;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -10,16 +15,8 @@ import java.io.IOException;
 
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.Arrays;
 
 import Project.Http.HttpRequest;
-
-interface RequestHandler {
-    void handleHttpRequest(HttpRequest req);
-}
 
 
 public class BasicServer{
@@ -34,8 +31,8 @@ public class BasicServer{
 
 
         BasicServer server = new BasicServer();
-        server.addRoute("GET/", (req) -> System.out.println("Request Recieved."));
-        server.addRoute("GET/new", (req) -> {
+        server.addRoute("GET", "/", (req) -> System.out.println("Request Recieved."));
+        server.addRoute("GET", "/new", (req) -> {
             System.out.println("Second route executed");
         });
         
@@ -76,13 +73,16 @@ public class BasicServer{
         quit = true;
     }
 
-    public void addRoute(String route, RequestHandler handler) { // route is a combination of method and uri. e.g. "GET /"
-        BasicServer.routes.put(route, handler);
+    public void addRoute(String method, String path, RequestHandler handler) { // route is a combination of method and uri. e.g. "GET /"
+        BasicServer.routes.put(method + path, handler);
+    }
+
+    public static void getRoutes() {
+        System.out.println(Arrays.toString(routes.keySet().toArray()));
     }
 
 
     public static Boolean isPermittedRoute(String method, String uri) {
-        System.out.println("isPermittedRoute" + BasicServer.routes.containsKey(method + uri));
         return BasicServer.routes.containsKey(method + uri);
     }
 
