@@ -37,7 +37,7 @@ public class BasicServer{
             res.setStatusCode(200);
             res.addHeader("Origin", "localhost:2000");
             res.addHeader("Content-Type", "text/plain; charset=UTF-8");
-            res.addHeader("Content-Length", "12");
+            // res.addHeader("Content-Length", "12");
             res.addBody(req.getParameterValue("param1"));
         });
         server.addRoute("GET", "/new", (req, res) -> {
@@ -144,7 +144,7 @@ public class BasicServer{
                         // Send 400 bad request.
                         HttpResponse response = new HttpResponse();
                         response.setHttpVersion("HTTP/1.1");
-                        response.setStatusCode(415);
+                        response.setStatusCode(400);
                         this.sendResponse(response);
                         
                     }
@@ -166,12 +166,12 @@ public class BasicServer{
             output.println(response.getStatusMessage());
             if (response.getStatusCode() < 500) {
                 for (String header : response.getHeaderArray()){
-                    System.out.println(header);
                     output.println(header);
                 }
-                output.println("\n");
+                output.println();
                 if (response.getResponseBody() != null){
-                    output.println(response.getResponseBody());
+                    output.print(response.getResponseBody());
+                    output.flush();
                 }
             }
         }
