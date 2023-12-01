@@ -12,7 +12,7 @@ Implementing a basic HTTP server using socket connections and as few external li
 - HTTP requests can contain query parameters, headers (although not yet functional) but not a body.
 - Users can add status codes, headers and a body to HTTP responses.
 
-# In Development
+### In Development
 - Ability to add a body to HTTP requests enabling POST, PUT & PATCH methods to be used.
 - Selected header functionality for HTTP requests (currently they are parsed and saved, but have no functionality).
 
