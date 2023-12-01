@@ -18,16 +18,24 @@ Implementing a basic HTTP server using socket connections and as few external li
 
 ## Usage Instructions
 Create the BasicServer Object.
-```BasicServer server = new BasicServer();```
+```
+BasicServer server = new BasicServer();
+```
 
 Add all of the HTTP methods you intend to create routes for.
-```server.addPermittedMethods(String[] methods);```
+```
+server.addPermittedMethods(String[] methods);
+```
 
 Add a route to the server.
-```server.addRoute(String method, String path, (HttpRequest req, HttpResponseres) -> {...});```
+```
+server.addRoute(String method, String path, (HttpRequest req, HttpResponseres) -> {...});
+```
 
 Start the server.
-```server.start(int port, int threadPoolSize);```
+```
+server.start(int port, int threadPoolSize);
+```
 
 ###Example:
 ```
