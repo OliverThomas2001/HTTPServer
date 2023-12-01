@@ -1,10 +1,11 @@
-package Project;
+package HTTPServer;
 
 import org.junit.Test;
+
+import HTTPServer.Http.HttpRequest;
+
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
-
-import Project.Http.HttpRequest;
 
 public class HttpRequestTests {
 

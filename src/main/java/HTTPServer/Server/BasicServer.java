@@ -1,4 +1,4 @@
-package Project.Server;
+package HTTPServer.Server;
 
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +10,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import HTTPServer.Http.HttpRequest;
+import HTTPServer.Http.HttpResponse;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -17,9 +20,6 @@ import java.io.IOException;
 
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import Project.Http.HttpRequest;
-import Project.Http.HttpResponse;
 
 
 public class BasicServer{
@@ -31,9 +31,6 @@ public class BasicServer{
     private static Set<String> permittedMethodSet = new HashSet<>(); // A set containing all permissible methods across entire server.
     private static Map<String, RequestHandler> routes = new HashMap<String, RequestHandler>(); // needs to be shared amongst all instances of BasicServer.
     public static void main(String[] args) {
-
-        System.out.println(Arrays.toString(new String("Hello?").split("\\?")));
-
 
         BasicServer server = new BasicServer();
         server.addPermittedMethods(new String[]{"GET"});

@@ -1,4 +1,4 @@
-package Project;
+package HTTPServer;
 
 import static org.junit.Assert.assertTrue;
 
@@ -16,7 +16,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import Project.Server.BasicServer;
+import HTTPServer.Server.BasicServer;
 
 public class BasicServerIntegrationTest {
     private static BasicServer server;

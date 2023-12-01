@@ -1,7 +1,7 @@
-package Project.Server;
+package HTTPServer.Server;
 
-import Project.Http.HttpRequest;
-import Project.Http.HttpResponse;
+import HTTPServer.Http.HttpRequest;
+import HTTPServer.Http.HttpResponse;
 
 public interface RequestHandler {
     void handleHttpRequest(HttpRequest req, HttpResponse res);

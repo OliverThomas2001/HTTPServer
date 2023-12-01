@@ -1,4 +1,4 @@
-package Project.Http;
+package HTTPServer.Http;
 
 import java.util.HashMap;
 
