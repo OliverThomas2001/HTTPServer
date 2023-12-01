@@ -18,6 +18,7 @@ public class StatusCodes {
         statusCodeMap.put(402, "Payment Required");
         statusCodeMap.put(403, "Forbidden");
         statusCodeMap.put(404, "Not Found");
+        statusCodeMap.put(405, "Method Not Allowed");
         statusCodeMap.put(406, "Not Acceptable");
         statusCodeMap.put(408, "Request Timeout");
         statusCodeMap.put(413, "Request Too Large");

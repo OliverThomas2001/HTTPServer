@@ -4,14 +4,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Arrays;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import HTTPServer.Http.HttpRequest;
-import HTTPServer.Http.HttpResponse;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -20,6 +16,11 @@ import java.io.IOException;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import java.util.Date;
+
+import HTTPServer.Http.HttpRequest;
+import HTTPServer.Http.HttpResponse;
 
 
 public class BasicServer{
@@ -33,14 +34,12 @@ public class BasicServer{
     public static void main(String[] args) {
 
         BasicServer server = new BasicServer();
-        server.addPermittedMethods(new String[]{"GET"});
+        server.addPermittedMethods(new String[]{"GET", "POST"});
         server.addRoute("GET", "/", (req, res) -> {
             res.setHttpVersion("HTTP/1.1");
             res.setStatusCode(200);
             res.addHeader("Origin", "localhost:2000");
             res.addHeader("Content-Type", "text/plain; charset=UTF-8");
-            // res.addHeader("Content-Length", "12");
-            System.out.println(req.getParameterValue("param1"));
             res.addBody(req.getParameterValue("param1"));
         });
         server.addRoute("GET", "/new", (req, res) -> {
@@ -95,10 +94,6 @@ public class BasicServer{
         pathSet.add(path);
     }
 
-    public static void getRoutes() {
-        System.out.println(Arrays.toString(routes.keySet().toArray()));
-    }
-
     public static class ClientHandler implements Runnable {
         private Socket clientSocket;
         private PrintWriter output;
@@ -113,7 +108,7 @@ public class BasicServer{
 
         public void run() {
             try {
-                initialiseStreams(); // saves
+                initialiseStreams(); // saves I/O streams to instance variables input & output
                 parseIncomingRequest();
                 sendResponse();
             } catch (IOException e) {
@@ -134,21 +129,26 @@ public class BasicServer{
             if ((requestLine = input.readLine()) != null){
                 request = new HttpRequest(requestLine);
                 if (request.getRequestValidity() == false) {
-                    // send 400 error code.
+                    response.setHttpVersion("HTTP/1.1");
+                    response.setStatusCode(400);
                 } else if (!validateHttpVersion(request.getHttpVersion())) {
-                    // send 505 error code.
+                    response.setHttpVersion("HTTP/1.1");
+                    response.setStatusCode(505);
                 } else if (!validatePathExistence(request.getRequestPath())) {
-                    // send 404 error code.
+                    response.setHttpVersion("HTTP/1.1");
+                    response.setStatusCode(404);
                 } else if (!validateMethodPermittance(request.getRequestMethod())) {
-                    // send 501 error code.
+                    response.setHttpVersion("HTTP/1.1");
+                    response.setStatusCode(501);
                 } else if (!validateUriExistence(request.getRequestMethod(), request.getRequestPath())) {
-                    // send 405 error code.
+                    response.setHttpVersion("HTTP/1.1");
+                    response.setStatusCode(405);
+                    response.addHeader("Allow", getValidMethodsForRoute());
                 } else {
                     // Reads all subsequent lines sent by the client and adds headers to hashmap.
                     String inputMessage;
                     //  && !inputMessage.isEmpty()
                     while((inputMessage = input.readLine()) != null && !inputMessage.isEmpty()) {
-                        // System.out.println(inputMessage);
                         String[] header = inputMessage.split(": ");
                         request.addHeader(header[0], header[1]);
                     }
@@ -184,20 +184,53 @@ public class BasicServer{
             handler.handleHttpRequest(request, response);
         }
 
-        private void sendResponse() {
-            // add mandatory headers here e.g if response body exists, add content-length etc.
+        private String getValidMethodsForRoute() {
+            StringBuilder validMethods = new StringBuilder();
+            permittedMethodSet.forEach(method -> {
+                if (routes.containsKey(method + request.getRequestPath())) {
+                    validMethods.append(method + ", ");
+                }
+            });
 
-            output.println(response.getStatusMessage());
-            if (response.getStatusCode() < 400) { // If response is responding with an error.
-                for (String header : response.getHeaderArray()){
-                    output.println(header);
-                }
-                output.println();
-                if (response.getResponseBody() != null){
-                    output.print(response.getResponseBody());
-                    output.flush();
-                }
+            validMethods.delete(validMethods.length()-2, validMethods.length()-1);
+            return validMethods.toString();
+        }
+
+        private void sendResponse() {
+
+            // add mandatory headers here e.g date, content-type etc
+            response.addHeader("Date", getDate());
+            if (response.getResponseBody() != null) {
+                // currently ownly supports plain text requests and responses
+                response.addHeader("Content-Type", "text/plain"); 
             }
+
+            output.println(response.getStatusMessage()); // sends status message
+
+            for (String header : response.getHeaderArray()){ 
+                output.println(header); // sends response headers
+            }
+            output.println(); // sends empty line, signalling end of headers
+
+            if (response.getResponseBody() != null){
+                output.print(response.getResponseBody()); // sends response body
+                output.flush();
+            }
+        }
+
+        private String getDate() {
+            Date date = new Date();
+            String[] dateStringArray = date.toString().split(" ");
+            StringBuilder formattedDate = new StringBuilder();
+
+            formattedDate.append(dateStringArray[0] + ", ");
+            formattedDate.append(dateStringArray[2] + " ");
+            formattedDate.append(dateStringArray[1] + " ");
+            formattedDate.append(dateStringArray[5] + " ");
+            formattedDate.append(dateStringArray[3] + " ");
+            formattedDate.append(dateStringArray[4]);
+            
+            return formattedDate.toString();
         }
 
         private void close() {

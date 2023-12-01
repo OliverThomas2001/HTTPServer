@@ -45,7 +45,7 @@ public class HttpResponse {
         String[] headerArray = new String[responseHeaders.size()];
         int i = 0;
         for (String headerType : responseHeaders.keySet()) {
-            headerArray[i] = headerType + ":" + responseHeaders.get(headerType) + "\r";
+            headerArray[i] = headerType + ": " + responseHeaders.get(headerType) + "\r";
             i++;
         }
         return headerArray;
