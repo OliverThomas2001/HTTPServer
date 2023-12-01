@@ -38,6 +38,7 @@ public class BasicServerIntegrationTest {
     public static void setUp() {
 
         server = new BasicServer();
+        server.addPermittedMethods(new String[]{"GET"});
         server.addRoute("GET", "/noParams/noHeaders/noBody", (req, res) -> {
             res.setHttpVersion("HTTP/1.1");
             res.setStatusCode(200);

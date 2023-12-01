@@ -1,7 +1,9 @@
 package Project.Server;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Arrays;
 
 import java.util.concurrent.ExecutorService;
@@ -25,6 +27,8 @@ public class BasicServer{
     private ExecutorService threadPool;
     private volatile Boolean quit = false;
 
+    private static Set<String> pathSet = new HashSet<>(); // A set containing all permissible paths the user has created.
+    private static Set<String> permittedMethodSet = new HashSet<>(); // A set containing all permissible methods across entire server.
     private static Map<String, RequestHandler> routes = new HashMap<String, RequestHandler>(); // needs to be shared amongst all instances of BasicServer.
     public static void main(String[] args) {
 
@@ -32,12 +36,14 @@ public class BasicServer{
 
 
         BasicServer server = new BasicServer();
+        server.addPermittedMethods(new String[]{"GET"});
         server.addRoute("GET", "/", (req, res) -> {
             res.setHttpVersion("HTTP/1.1");
             res.setStatusCode(200);
             res.addHeader("Origin", "localhost:2000");
             res.addHeader("Content-Type", "text/plain; charset=UTF-8");
             // res.addHeader("Content-Length", "12");
+            System.out.println(req.getParameterValue("param1"));
             res.addBody(req.getParameterValue("param1"));
         });
         server.addRoute("GET", "/new", (req, res) -> {
@@ -47,6 +53,12 @@ public class BasicServer{
         
         
         server.start(2000, 4); 
+    }
+
+    public void addPermittedMethods(String[] allowedMethodArray) {
+        for (String method : allowedMethodArray) {
+            permittedMethodSet.add(method);
+        }
     }
     
     public void start(int port, int threadPoolSize) {
@@ -83,15 +95,11 @@ public class BasicServer{
 
     public void addRoute(String method, String path, RequestHandler handler) { // route is a combination of method and uri. e.g. "GET /"
         BasicServer.routes.put(method + path, handler);
+        pathSet.add(path);
     }
 
     public static void getRoutes() {
         System.out.println(Arrays.toString(routes.keySet().toArray()));
-    }
-
-
-    public static Boolean isPermittedRoute(String method, String uri) {
-        return BasicServer.routes.containsKey(method + uri);
     }
 
     public static class ClientHandler implements Runnable {
@@ -100,56 +108,17 @@ public class BasicServer{
         private BufferedReader input;
 
         private HttpRequest request;
-        // add response here;
+        HttpResponse response = new HttpResponse();
 
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
         }
 
-        private void initialise() throws IOException{
-            input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            output = new PrintWriter(clientSocket.getOutputStream(), true);
-        }
-
         public void run() {
             try {
-                this.initialise();
-
-                String requestLine;
-                // First line in HTTP request is the "request line"
-                if ((requestLine = input.readLine()) != null){
-                    System.out.println(requestLine);
-                    request = new HttpRequest(requestLine);
-
-                    if (request.getRequestValidity()) {
-                        System.out.println("Valid request line");
-
-                        // Reads all subsequent lines sent by the client and adds headers to hashmap.
-                        String inputMessage;
-                        //  && !inputMessage.isEmpty()
-                        while((inputMessage = input.readLine()) != null && !inputMessage.isEmpty()) {
-                            // System.out.println(inputMessage);
-                            String[] header = inputMessage.split(": ");
-                            request.addHeader(header[0], header[1]);
-                        }
-                        
-
-                        HttpResponse response = new HttpResponse();
-                        handleHttpRequest(request.getRequestMethod() + request.getRequestPath(), request, response);
-
-                        this.sendResponse(response);
-
-                    } else {
-                        System.out.println("Invalid request line");
-                        // Send 400 bad request.
-                        HttpResponse response = new HttpResponse();
-                        response.setHttpVersion("HTTP/1.1");
-                        response.setStatusCode(400);
-                        this.sendResponse(response);
-                        
-                    }
-                }
-
+                initialiseStreams(); // saves
+                parseIncomingRequest();
+                sendResponse();
             } catch (IOException e) {
                 System.out.println(e.toString());
             } finally {
@@ -158,13 +127,71 @@ public class BasicServer{
             }
         }
 
-        public void sendResponse(HttpResponse response) {
+        private void initialiseStreams() throws IOException{
+            input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            output = new PrintWriter(clientSocket.getOutputStream(), true);
+        }
 
+        private void parseIncomingRequest() throws IOException{
+            String requestLine;
+            if ((requestLine = input.readLine()) != null){
+                request = new HttpRequest(requestLine);
+                if (request.getRequestValidity() == false) {
+                    // send 400 error code.
+                } else if (!validateHttpVersion(request.getHttpVersion())) {
+                    // send 505 error code.
+                } else if (!validatePathExistence(request.getRequestPath())) {
+                    // send 404 error code.
+                } else if (!validateMethodPermittance(request.getRequestMethod())) {
+                    // send 501 error code.
+                } else if (!validateUriExistence(request.getRequestMethod(), request.getRequestPath())) {
+                    // send 405 error code.
+                } else {
+                    // Reads all subsequent lines sent by the client and adds headers to hashmap.
+                    String inputMessage;
+                    //  && !inputMessage.isEmpty()
+                    while((inputMessage = input.readLine()) != null && !inputMessage.isEmpty()) {
+                        // System.out.println(inputMessage);
+                        String[] header = inputMessage.split(": ");
+                        request.addHeader(header[0], header[1]);
+                    }
+                    
+                    handleHttpRequest();
+                }
+
+            }
+
+        }
+
+        private Boolean validatePathExistence(String path) {
+            return BasicServer.pathSet.contains(path);
+        }
+
+        private Boolean validateMethodPermittance(String method) {
+            return BasicServer.permittedMethodSet.contains(method);
+        }
+
+        // this checks the user has added a route for the given request method and uri.
+        private static Boolean validateUriExistence(String method, String uri) {
+            return BasicServer.routes.containsKey(method + uri);
+        }
+
+        private Boolean validateHttpVersion(String httpVersion) {
+            // At present, I only plan to use version 1.1 but could extend to other versions at a later date.
+            return httpVersion.equals("HTTP/1.1");
+        }
+
+        // can likely remove the request parameter from this function just use the instance variable.
+        private void handleHttpRequest() {
+            RequestHandler handler = routes.get(request.getRequestMethod() + request.getRequestPath());
+            handler.handleHttpRequest(request, response);
+        }
+
+        private void sendResponse() {
             // add mandatory headers here e.g if response body exists, add content-length etc.
 
-
             output.println(response.getStatusMessage());
-            if (response.getStatusCode() < 500) {
+            if (response.getStatusCode() < 400) { // If response is responding with an error.
                 for (String header : response.getHeaderArray()){
                     output.println(header);
                 }
@@ -176,7 +203,7 @@ public class BasicServer{
             }
         }
 
-        public void close() {
+        private void close() {
             try {
                 if (input != null) {
                     input.close();
@@ -191,16 +218,6 @@ public class BasicServer{
                 }
             } catch (IOException e) {
                 System.out.println(e.toString());
-            }
-        }
-
-        // can likely remove the request parameter from this function just use the instance variable.
-        public void handleHttpRequest(String route, HttpRequest req, HttpResponse res) {
-            RequestHandler handler = routes.get(route);
-            if (handler != null) {
-                handler.handleHttpRequest(req, res);
-            } else {
-                // Send 400 bad request.
             }
         }
     }

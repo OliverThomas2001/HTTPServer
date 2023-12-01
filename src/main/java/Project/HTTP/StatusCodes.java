@@ -6,10 +6,8 @@ import java.util.HashMap;
 
 public class StatusCodes {
     public static final Map<Integer, String> statusCodeMap = new HashMap<>();
-    // will have to add more later.
+    // Theses are the error codes I intend to implement for now.
     static {
-        statusCodeMap.put(100, "Continue");
-        statusCodeMap.put(101, "Switching Protocols");
         
         statusCodeMap.put(200, "OK");
         statusCodeMap.put(201, "Created");
@@ -25,7 +23,6 @@ public class StatusCodes {
         statusCodeMap.put(413, "Request Too Large");
         statusCodeMap.put(414, "Request-URI Too Long");
         statusCodeMap.put(415, "Unsupported Media Type");
-        statusCodeMap.put(417, "Expectation Failed");
 
         statusCodeMap.put(500, "Internal Server Error");
         statusCodeMap.put(501, "Not Implemented");
