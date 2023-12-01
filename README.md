@@ -16,4 +16,6 @@ Implementing a basic HTTP server using socket connections and as few external li
 - Ability to add a body to HTTP requests enabling POST, PUT & PATCH methods to be used.
 - Selected header functionality for HTTP requests (currently they are parsed and saved, but have no functionality).
 
-## Documentation
+## Usage Instructions
+Create the BasicServer Object.
+`BasicServer server = new BasicServer()`
