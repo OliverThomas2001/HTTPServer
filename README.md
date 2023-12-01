@@ -37,7 +37,7 @@ Start the server.
 server.start(int port, int threadPoolSize);
 ```
 
-###Example:
+### Example:
 ```
 BasicServer server = new BasicServer();
 server.addPermittedMethods(new String[]{"GET"});
