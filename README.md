@@ -29,7 +29,7 @@ server.addPermittedMethods(String[] methods);
 
 Add a route to the server.
 ```
-server.addRoute(String method, String path, (HttpRequest req, HttpResponseres) -> {...});
+server.addRoute(String method, String path, (HttpRequest req, HttpResponse res) -> {...});
 ```
 
 Start the server.
